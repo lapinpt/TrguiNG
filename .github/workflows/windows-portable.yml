@@ -56,6 +56,9 @@ jobs:
       - name: Package portable ZIP
         shell: pwsh
         run: ./ci/package_windows_portable.ps1
+      - name: Smoke test portable Windows application
+        shell: pwsh
+        run: ./ci/smoke_windows_portable.ps1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: TrguiNG-portable-windows-x64
