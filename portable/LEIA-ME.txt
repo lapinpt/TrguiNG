@@ -1,0 +1,42 @@
+TrguiNG Portable para Windows x64
+================================
+
+1. Extraia o ZIP para uma pasta com permissao de escrita, fora de Program Files.
+2. Feche a versao instalada, incluindo o icone junto ao relogio.
+3. Para copiar a configuracao existente, execute Import-Settings.cmd ANTES de
+   abrir o EXE. O script guarda um backup, confirma SHA-256 e preserva o original.
+   Para indicar outro JSON, use PowerShell:
+   .\Import-Settings.ps1 -Source 'D:\Backup\trguing.json'
+4. Abra TrguiNG.exe. O runtime WebView2 instalado no Windows e necessario.
+
+Estrutura:
+  TrguiNG.exe             Aplicacao
+  dbip.mmdb               Base GeoIP, consultada localmente
+  portable.flag           Ativa o modo portatil
+  Data\trguing.json       Configuracao e perfis
+  Data\WebView2\          Perfil/cache do WebView2; criado automaticamente
+  Data\Backups\           Copia original feita pelo importador
+  BUILD-INFO.txt          Revisao exata e hashes do executavel e GeoIP
+
+Pode mudar a pasta inteira de unidade ou de computador. Caminhos para dados
+remotos/locais guardados nas definicoes podem precisar de ajuste no novo PC.
+Nao e necessario copiar o antigo EBWebView: a cache e recriada.
+Proteja Data e os backups: as passwords no JSON sao apenas ofuscadas.
+
+Feche sempre a aplicacao antes de copiar/remover a pasta ou desligar a unidade.
+Nao execute a versao instalada e a portatil em simultaneo: o servidor de
+instancia unica do projeto usa a mesma porta local.
+Nao ative associacoes .torrent/magnet se quiser evitar registos no Windows;
+essas opcoes continuam disponiveis por iniciativa do utilizador.
+
+Sem portable.flag, o EXE conserva o modo instalado, usando o perfil do Windows.
+Nao remova esse ficheiro para atualizar a versao portatil.
+Ao atualizar, feche a app, guarde uma copia da pasta e substitua apenas o EXE
+e os ficheiros de programa. Preserve Data e portable.flag.
+
+Este pacote e uma compilacao do fork lapinpt/TrguiNG, sem assinatura Authenticode.
+O Windows pode apresentar um aviso SmartScreen. O pacote nao inclui WebView2
+nem instala programas, servicos ou associacoes automaticamente.
+Codigo-fonte: https://github.com/lapinpt/TrguiNG/tree/portable-windows
+Licenca: GNU Affero General Public License v3 ou posterior; ver LICENSE.txt.
+GeoIP: DB-IP Country Lite, CC BY 4.0, https://db-ip.com/db/download/ip-to-country-lite

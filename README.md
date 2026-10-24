@@ -1,4 +1,6 @@
 # TrguiNG
+Windows portable builds from this fork are documented in [portable/LEIA-ME.txt](portable/LEIA-ME.txt).
+
 **Remote GUI for Transmission torrent daemon**
 
 ![GitHub release](https://img.shields.io/github/v/release/OpenScopeProject/TrguiNG)
