@@ -97,6 +97,9 @@ impl StoragePaths {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    static NEXT_FIXTURE: AtomicUsize = AtomicUsize::new(0);
 
     struct Fixture(PathBuf);
     impl Fixture {
@@ -105,8 +108,11 @@ mod tests {
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_nanos();
-            let path = std::env::temp_dir()
-                .join(format!("trguing-portable-{}-{stamp}", std::process::id()));
+            let path = std::env::temp_dir().join(format!(
+                "trguing-portable-{}-{}-{stamp}",
+                std::process::id(),
+                NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed)
+            ));
             fs::create_dir_all(path.join("Aplicação portátil")).unwrap();
             fs::create_dir_all(path.join("Roaming")).unwrap();
             Self(path)
