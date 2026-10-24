@@ -31,6 +31,7 @@ jobs:
       - uses: Swatinem/rust-cache@e9d7b9f1e587218970671bac74e5511ed9506e6a # v2
         with:
           workspaces: src-tauri
+          cache-on-failure: true
       - name: Test portable storage on Windows
         shell: pwsh
         run: |
@@ -56,9 +57,24 @@ jobs:
       - name: Package portable ZIP
         shell: pwsh
         run: ./ci/package_windows_portable.ps1
+      - name: Preserve build candidate for diagnostics
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: TrguiNG-portable-build-candidate
+          path: |
+            portable-output/*.zip
+            portable-output/*.sha256
+          if-no-files-found: error
       - name: Smoke test portable Windows application
         shell: pwsh
         run: ./ci/smoke_windows_portable.ps1
+      - name: Preserve smoke test diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: portable-smoke-diagnostics
+          path: portable-output/smoke-diagnostics/
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: TrguiNG-portable-windows-x64
