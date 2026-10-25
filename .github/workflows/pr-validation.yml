@@ -1,0 +1,71 @@
+name: Startup PR Validation
+
+on:
+  push:
+    branches: [pr-validation]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: isolated-startup-pr
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: pr-validation
+          path: validation
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: pr-hide-on-startup
+          path: app
+          persist-credentials: false
+      - name: Record tested revision
+        working-directory: app
+        run: git rev-parse HEAD
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install stable Rust
+        shell: pwsh
+        run: |
+          rustup toolchain install stable --profile minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          rustup default stable
+      - uses: Swatinem/rust-cache@e9d7b9f1e587218970671bac74e5511ed9506e6a # v2
+        with:
+          workspaces: app/src-tauri
+          cache-on-failure: true
+      - name: Fetch pinned GeoIP database
+        shell: pwsh
+        run: |
+          Invoke-WebRequest 'https://github.com/openscopeproject/TrguiNG/releases/download/v1.5.1/dbip.mmdb' -OutFile app/src-tauri/dbip.mmdb
+          if ((Get-FileHash app/src-tauri/dbip.mmdb -Algorithm SHA256).Hash -ne 'e4f183d26a79e7750abb24cce0dcc595a0cb009f2de4082c27b84cae6bbd7944') { throw 'GeoIP checksum mismatch' }
+      - name: Install locked frontend dependencies
+        working-directory: app
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Check frontend
+        working-directory: app
+        run: npx --no-install eslint src/
+      - name: Build isolated startup PR
+        working-directory: app
+        run: npm run tauri -- build --no-bundle --ci -- --locked
+      - name: Test startup visibility in installed mode
+        shell: pwsh
+        run: ./validation/ci/smoke_windows_startup.ps1 -SourceRoot ./app
+      - name: Preserve runtime diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: startup-pr-diagnostics
+          path: app/startup-diagnostics/
+          if-no-files-found: ignore
