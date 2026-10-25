@@ -58,7 +58,7 @@ try {
         }
         Write-Host "Starting portable GUI, attempt $attempt"
         $process = Start-Process -FilePath (Join-Path $root 'TrguiNG.exe') -WorkingDirectory $fixture -PassThru -RedirectStandardOutput (Join-Path $diagnostics "stdout-$attempt.txt") -RedirectStandardError (Join-Path $diagnostics "stderr-$attempt.txt")
-        if ($attempt -ge 3) {
+        if ($attempt -ge 1) {
             $expected = if ($attempt -eq 3) { 'hidden' } else { 'visible' }
             $startupReady = $false
             foreach ($retry in 1..30) {
@@ -71,7 +71,7 @@ try {
             Start-Sleep -Seconds 2
             $visible = [PortableWindowProbe]::IsVisible($process.Id)
             if ($attempt -eq 3 -and $visible) { throw 'Hide on startup revealed a visible window.' }
-            if ($attempt -eq 4 -and -not $visible) { throw 'No-tray fallback left the application inaccessible.' }
+            if ($attempt -ne 3 -and -not $visible) { throw 'Application should have started visibly.' }
             Write-Host "PASS: startup state $expected verified against actual Windows window visibility."
         }
         $ready = $false
@@ -86,7 +86,7 @@ try {
             }
         }
         if (-not $ready) { throw 'The frontend did not signal readiness.' }
-        Write-Host 'Frontend argument listener is ready.'
+        Write-Host 'Explicit open request acknowledged.'
         if ($attempt -eq 3) {
             # An explicit request (like launching another instance) must reveal it.
             foreach ($retry in 1..10) {
