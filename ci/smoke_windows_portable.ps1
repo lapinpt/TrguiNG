@@ -16,19 +16,37 @@ $process = $null
 Add-Type @'
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 public static class PortableWindowProbe {
     private delegate bool EnumProc(IntPtr window, IntPtr param);
     [DllImport("user32.dll")] private static extern bool EnumWindows(EnumProc callback, IntPtr param);
     [DllImport("user32.dll")] private static extern bool IsWindowVisible(IntPtr window);
     [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr window, out uint pid);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowText(IntPtr window, StringBuilder title, int length);
     public static bool IsVisible(int processId) {
         bool visible = false;
         EnumWindows((window, param) => {
             uint pid; GetWindowThreadProcessId(window, out pid);
-            if (pid == (uint)processId && IsWindowVisible(window)) visible = true;
+            var title = new StringBuilder(512);
+            GetWindowText(window, title, title.Capacity);
+            // Tray libraries create auxiliary native windows in the same PID.
+            // Match the application's documented main-window title/prefix.
+            if (pid == (uint)processId && title.ToString().StartsWith("Transmission GUI") && IsWindowVisible(window)) visible = true;
             return true;
         }, IntPtr.Zero);
         return visible;
+    }
+    public static string Describe(int processId) {
+        var result = new StringBuilder();
+        EnumWindows((window, param) => {
+            uint pid; GetWindowThreadProcessId(window, out pid);
+            if (pid == (uint)processId) {
+                var title = new StringBuilder(512); GetWindowText(window, title, title.Capacity);
+                result.AppendLine("HWND=" + window + " visible=" + IsWindowVisible(window) + " title=" + title);
+            }
+            return true;
+        }, IntPtr.Zero);
+        return result.ToString();
     }
 }
 '@
@@ -74,6 +92,7 @@ try {
             if (-not $startupReady) { throw "Expected startup state: $expected" }
             Start-Sleep -Seconds 2
             $visible = [PortableWindowProbe]::IsVisible($process.Id)
+            Write-Host ([PortableWindowProbe]::Describe($process.Id))
             if ($attempt -eq 3 -and $visible) { throw 'Hide on startup revealed a visible window.' }
             if ($attempt -ne 3 -and -not $visible) { throw 'Application should have started visibly.' }
             Write-Host "PASS: startup state $expected verified against actual Windows window visibility."
