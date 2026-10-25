@@ -54,6 +54,10 @@ try {
             $settings = Get-Content -LiteralPath (Join-Path $root 'Data\trguing.json') -Raw | ConvertFrom-Json
             $settings.app | Add-Member -NotePropertyName hideOnStartup -NotePropertyValue $true -Force
             $settings.app.showTrayIcon = ($attempt -eq 3)
+            # Tray startup and explicit reopen must not depend on a server tab.
+            $settings.servers = @()
+            $settings.app.openTabs = @()
+            $settings.app.lastTab = -1
             [IO.File]::WriteAllText((Join-Path $root 'Data\trguing.json'), ($settings | ConvertTo-Json -Depth 32))
         }
         Write-Host "Starting portable GUI, attempt $attempt"
