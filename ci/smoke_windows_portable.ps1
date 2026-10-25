@@ -132,9 +132,11 @@ try {
         if ($attempt -eq 1) {
             # WebView2 processes can take a moment to release the profile after exit.
             $moved = Join-Path $fixture 'Moved location'
-            foreach ($retry in 1..10) {
-                try { Move-Item -LiteralPath $root -Destination $moved; break } catch {
-                    if ($retry -eq 10) { throw }
+            foreach ($retry in 1..30) {
+                # Directory.Move performs a same-volume rename. Move-Item can
+                # partially move a tree while WebView2 is releasing file handles.
+                try { [IO.Directory]::Move($root, $moved); break } catch {
+                    if ($retry -eq 30) { throw }
                     Start-Sleep -Seconds 1
                 }
             }
