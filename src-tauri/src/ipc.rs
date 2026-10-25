@@ -453,6 +453,11 @@ impl Ipc {
     }
 
     pub async fn send(&self, args: &Vec<String>, app: AppHandle) -> Result<(), String> {
+        // Only a second instance or real launch arguments should reveal the UI.
+        // The primary instance already creates its window during setup.
+        if self.listening && args.is_empty() {
+            return Ok(());
+        }
         let client = reqwest::Client::builder()
             .connect_timeout(Duration::from_secs(3))
             .read_timeout(Duration::from_secs(10))

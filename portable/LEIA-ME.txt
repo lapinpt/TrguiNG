@@ -9,6 +9,13 @@ TrguiNG Portable para Windows x64
    .\Import-Settings.ps1 -Source 'D:\Backup\trguing.json'
 4. Abra TrguiNG.exe. O runtime WebView2 instalado no Windows e necessario.
 
+Arranque apenas na tray:
+  App Settings > Integrations > Show tray icon: ON > Hide on startup: ON.
+  Guarde e reinicie a app. A janela nao aparece durante o arranque.
+  O icone da tray permite voltar a mostrar a janela. Abrir novamente o EXE
+  ou enviar um .torrent/magnet tambem permite mostrar a instancia existente.
+  Sem icone de tray disponivel, a janela abre normalmente.
+
 Estrutura:
   TrguiNG.exe             Aplicacao
   dbip.mmdb               Base GeoIP, consultada localmente
